@@ -1,0 +1,24 @@
+import { Award, Folder, FolderOpen, ListChecks, RotateCcw } from "lucide-react";
+import { Link } from "wouter";
+import { startLogin } from "@/const";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import "@/quiz.css";
+
+export default function StudentDashboard() {
+  const { user } = useAuth();
+  const dashboard = trpc.student.dashboard.useQuery(undefined, { enabled: Boolean(user) });
+  const leaderboard = trpc.student.leaderboard.useQuery();
+  if (!user) return <div className="auth-screen" dir="rtl"><div className="auth-card"><h1>لوحة إنجازك</h1><p>سجّل الدخول لمتابعة المحاولات وبنك الأخطاء والمجلدين.</p><button className="gold-button full" onClick={() => startLogin()}>تسجيل الدخول</button></div></div>;
+  const data = dashboard.data;
+  const errorQuestions = (data?.errorQuestions ?? []).filter((item: any) => !item.resolvedAt);
+  const masteredCount = data?.masteredCount ?? 0;
+  const grouped = [...new Map(errorQuestions.map((item: any) => [item.quizId, item])).values()];
+  return <main className="student-dashboard container-alpha" dir="rtl">
+    <header className="student-heading"><div><span className="section-kicker">مساحتك التعليمية</span><h1>لوحة <em>الإنجاز.</em></h1><p>تابع ما أنجزته، وما يحتاج إلى مراجعة، من مكان واحد.</p></div><div className="student-heading-actions"><Link className="ghost-button" href="/progress"><FolderOpen size={16}/> مجلداتي</Link><Link className="gold-button" href="/quizzes">ابدأ كويزًا</Link></div></header>
+    <section className="student-stat-grid"><div><ListChecks size={20}/><strong>{data?.completed ?? 0}</strong><span>محاولات منجزة</span></div><div className="error-stat"><RotateCcw size={20}/><strong>{data?.errorCount ?? errorQuestions.length}</strong><span>عدد الأخطاء</span></div><div className="mastered-stat"><Award size={20}/><strong>{masteredCount}</strong><span>ما تم إتقانه</span></div></section>
+    <section className="error-bank-panel student-panel"><div className="panel-heading"><div><h2>بنك الأخطاء</h2><p className="panel-subtitle">كل إجابة صحيحة في الإعادة تنقل السؤال إلى خانة الإتقان تلقائيًا.</p></div><span>{errorQuestions.length} غير متقنة</span></div><div className="error-bank-actions"><div className="error-bank-tile error-tile"><RotateCcw size={22}/><strong>{data?.errorCount ?? errorQuestions.length}</strong><span>عدد الأخطاء</span><small>أسئلة لم تُتقن بعد</small></div><div className="error-bank-tile mastered-tile"><Award size={22}/><strong>{masteredCount}</strong><span>ما تم إتقانه</span><small>أسئلة حُلّت بشكل صحيح</small></div><div className="error-bank-tile retry-tile"><FolderOpen size={22}/><strong>{grouped.length}</strong><span>إعادة الاختبار</span><small>حسب الكويز</small></div></div>{errorQuestions.length ? <div className="error-bank-list"><div className="error-bank-list-head"><strong>أسئلة تحتاج مراجعة</strong><span>أعد سؤالًا منفردًا أو أخطاء الكويز كاملًا</span></div>{grouped.map((group: any) => <div className="error-quiz-group" key={group.quizId}><div><strong>{group.quiz?.title ?? "كويز Alpha"}</strong><small>{errorQuestions.filter((item: any) => item.quizId === group.quizId).length} أخطاء</small></div><Link className="blue-action" href={`/quizzes/${group.quizId}?errorBank=1`}><RotateCcw size={15}/> إعادة اختبار الأخطاء</Link></div>)}{errorQuestions.map((error: any, index: number) => <div className="error-question-row" key={error.errorId}><div className="error-question-index">{index + 1}</div><div><strong>{error.quiz?.title ?? "سؤال يحتاج مراجعة"}</strong><small>السؤال رقم {error.position}</small></div><Link className="mini-link error-retry-link" href={`/quizzes/${error.quizId}?errorQuestion=${error.questionId}`}><RotateCcw size={14}/> أعد السؤال</Link></div>)}</div> : <div className="empty-state">ممتاز، لا توجد أخطاء غير متقنة حاليًا.</div>}</section>
+    <section className="student-panel folders-panel"><div className="panel-heading"><div><h2>مجلداتي</h2><p className="panel-subtitle">احفظ أسئلتك في مجلدين خاصين بك.</p></div><Link className="mini-link" href="/progress">فتح المجلدات</Link></div>{data?.folders?.map((folder: any) => <div className="student-row" key={folder.id}><Folder size={17}/><span>{folder.name}</span><small>أسئلتي</small></div>)}{!data?.folders?.length && <div className="empty-state">يمكنك إنشاء مجلدين لحفظ أسئلتك.</div>}</section>
+    <section className="student-panel leaderboard-panel"><div className="panel-heading"><h2>أفضل 30 طالبًا</h2><span>حسب الحل الصحيح والأسبقية</span></div>{(leaderboard.data ?? []).slice(0,30).map(row => <div className="leader-row" key={row.userId}><b>{row.rank}</b><span>{row.user?.name ?? "طالب Alpha"}</span><strong>{row.correct} إجابة صحيحة</strong></div>)}{!leaderboard.data?.length && <div className="empty-state">ستظهر لوحة المتصدرين بعد تسليم المحاولات.</div>}</section>
+  </main>;
+}

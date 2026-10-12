@@ -1,0 +1,1 @@
+ALTER TABLE `quizzes` ADD `section` varchar(80) DEFAULT 'قسم 1' NOT NULL;

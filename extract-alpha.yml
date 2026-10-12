@@ -1,0 +1,41 @@
+name: Extract Alpha source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Decode and extract Alpha source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s alpha-vercel-source.txt
+          base64 -d alpha-vercel-source.txt > /tmp/alpha-project.tar.gz
+          mkdir -p /tmp/alpha-extracted
+          tar -xzf /tmp/alpha-project.tar.gz -C /tmp/alpha-extracted
+          test -f /tmp/alpha-extracted/alpha-vercel-ready/package.json
+          cp -a /tmp/alpha-extracted/alpha-vercel-ready/. .
+          rm -f alpha-vercel-source.txt
+          rm -f /tmp/alpha-project.tar.gz
+          rm -rf /tmp/alpha-extracted
+          test -f package.json
+          test -f api/index.ts
+          test -f vercel.json
+
+      - name: Commit extracted project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Extract Alpha Vercel project"
+          git push

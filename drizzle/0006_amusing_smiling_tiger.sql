@@ -1,0 +1,1 @@
+ALTER TABLE `platformSettings` ADD `faviconUrl` text;

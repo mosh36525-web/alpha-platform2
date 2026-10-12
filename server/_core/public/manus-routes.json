@@ -1,0 +1,12 @@
+{
+  "routes": [
+    { "path": "/", "title": "Alpha — الرئيسية" },
+    { "path": "/app", "title": "Alpha — مكتبتي" },
+    { "path": "/quizzes", "title": "Alpha — الكويزات" },
+    { "path": "/competition", "title": "Alpha — تنافس" },
+    { "path": "/account", "title": "Alpha — حسابي" },
+    { "path": "/progress", "title": "Alpha — لوحة الإنجاز" },
+    { "path": "/admin", "title": "Alpha — لوحة التحكم" },
+    { "path": "/404", "title": "Alpha — الصفحة غير موجودة" }
+  ]
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `competitionPlayers` ADD `inviteStatus` enum('pending','accepted','rejected') DEFAULT 'pending' NOT NULL;

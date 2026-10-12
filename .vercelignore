@@ -1,0 +1,5 @@
+# Private backup data should never be bundled into a Vercel deployment
+database/alpha_data.sql
+*.zip
+TRANSFER_AR.md
+CONTENTS_AR.md
