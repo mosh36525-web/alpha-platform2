@@ -7,16 +7,6 @@ type UseAuthOptions = {
   redirectPath?: string;
 };
 
-// مستخدم تجريبي افتراضي بصلاحيات المالك الكاملة
-const demoAdminUser = {
-  id: 1,
-  openId: "demo-owner-123",
-  name: "مدير المنصة",
-  email: "admin@alpha.com",
-  role: "owner",
-  status: "active",
-};
-
 export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
   const utils = trpc.useUtils();
@@ -29,6 +19,7 @@ export function useAuth(options?: UseAuthOptions) {
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
       utils.auth.me.setData(undefined, null);
+      window.location.reload();
     },
   });
 
@@ -49,21 +40,24 @@ export function useAuth(options?: UseAuthOptions) {
       } catch {}
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      window.location.reload();
     }
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    // إجبار النظام على اعتماد المستخدم التجريبي دائماً لتجاوز مشاكل المصادقة
-    const currentUser = meQuery.data ?? demoAdminUser;
+    // الاعتماد على الجلسة الحقيقية فقط بدون فرض أدمن تلقائي
+    const currentUser = meQuery.data ?? null;
 
     return {
       user: currentUser,
-      loading: false, // إلغاء حالة التحميل لفتح المنصة فوراً
-      error: null,
-      isAuthenticated: true, // فرض حالة المصادقة لتفتح جميع الصفحات
+      loading: meQuery.isLoading || logoutMutation.isPending,
+      error: meQuery.error ?? logoutMutation.error ?? null,
+      isAuthenticated: Boolean(currentUser),
     };
   }, [
     meQuery.data,
+    meQuery.error,
+    meQuery.isLoading,
     logoutMutation.error,
     logoutMutation.isPending,
   ]);
