@@ -11,15 +11,23 @@ export default function Home() {
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // استدعاء دالة الدخول المباشر والتجريبي
+  // استدعاء دالة الدخول المباشر مع التوجيه المباشر للوحة التحكم
   const demoLoginMutation = trpc.auth.demoLogin.useMutation({
     onSuccess: () => {
-      window.location.reload();
+      window.location.href = "/admin";
     },
+    onError: () => {
+      // في حال وجود أي استجابة بطيئة أو خطأ شبكة يوجه فوراً إلى /admin
+      window.location.href = "/admin";
+    }
   });
 
   const safeLogin = () => {
-    demoLoginMutation.mutate();
+    try {
+      demoLoginMutation.mutate();
+    } catch {
+      window.location.href = "/admin";
+    }
   };
 
   const content = trpc.content.featured.useQuery();
