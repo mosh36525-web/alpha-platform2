@@ -11,23 +11,30 @@ export default function Home() {
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // استدعاء دالة الدخول المباشر مع التوجيه المباشر للوحة التحكم
-  const demoLoginMutation = trpc.auth.demoLogin.useMutation({
+  // استدعاء دالة تسجيل دخول الطالب
+  const studentLoginMutation = trpc.auth.studentLogin.useMutation({
     onSuccess: () => {
-      window.location.href = "/admin";
+      window.location.reload();
     },
-    onError: () => {
-      // في حال وجود أي استجابة بطيئة أو خطأ شبكة يوجه فوراً إلى /admin
-      window.location.href = "/admin";
+    onError: (err) => {
+      alert(err.message || "حدث خطأ أثناء تسجيل الدخول");
     }
   });
 
   const safeLogin = () => {
-    try {
-      demoLoginMutation.mutate();
-    } catch {
-      window.location.href = "/admin";
+    const name = prompt("أدخل اسمك الكريم:");
+    if (!name || name.trim().length < 2) {
+      if (name !== null) alert("الرجاء إدخال اسم صحيح (حرفين على الأقل)");
+      return;
     }
+
+    const email = prompt("أدخل بريدك الإلكتروني:");
+    if (!email || !email.includes("@")) {
+      if (email !== null) alert("الرجاء إدخال بريد إلكتروني صحيح");
+      return;
+    }
+
+    studentLoginMutation.mutate({ name: name.trim(), email: email.trim() });
   };
 
   const content = trpc.content.featured.useQuery();
@@ -75,8 +82,8 @@ export default function Home() {
             {user ? (
               <button className="text-action" onClick={() => void logout()}>خروج</button>
             ) : (
-              <button className="text-action" onClick={safeLogin} disabled={demoLoginMutation.isPending}>
-                {demoLoginMutation.isPending ? "جاري الدخول..." : "دخول"}
+              <button className="text-action" onClick={safeLogin} disabled={studentLoginMutation.isPending}>
+                {studentLoginMutation.isPending ? "جاري الدخول..." : "دخول الطالب"}
               </button>
             )}
           </div>
@@ -102,8 +109,8 @@ export default function Home() {
               {user ? (
                 <Link className="ghost-button" href="/app">مكتبتي <ArrowUpLeft size={17}/></Link>
               ) : (
-                <button className="ghost-button" onClick={safeLogin} disabled={demoLoginMutation.isPending}>
-                  {demoLoginMutation.isPending ? "جاري الدخول..." : "ابدأ الآن"} <LogIn size={17}/>
+                <button className="ghost-button" onClick={safeLogin} disabled={studentLoginMutation.isPending}>
+                  {studentLoginMutation.isPending ? "جاري الدخول..." : "ابدأ الآن"} <LogIn size={17}/>
                 </button>
               )}
             </div>
